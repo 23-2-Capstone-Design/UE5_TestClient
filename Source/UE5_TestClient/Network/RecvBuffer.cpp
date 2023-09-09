@@ -4,47 +4,46 @@
 #include "RecvBuffer.h"
 
 RecvBuffer::RecvBuffer()
-	: Head(0), Tail(0)
+	: WritePosition(0), ReadPosition(0)
 {
 	Buffer.Init(0, MAX_BUFFER_SIZE);
 }
 
 void RecvBuffer::CleanupBuffer()
 {
-	if(Head == Tail)
+	if (WritePosition == ReadPosition)
 	{
-		Head = Tail = 0;
+		WritePosition = ReadPosition = 0;
 		return;
 	}
 
-	if(GetFreeSize() <= MIN_BUFFER_SIZE)
+	if (GetFreeSize() <= MIN_BUFFER_SIZE)
 	{
 		const uint32 DataSize = GetDataSize();
-		FMemory::Memcpy(Buffer.GetData(), GetBufferTail(), DataSize);
-		Tail = 0;
-		Head = DataSize;
+		FMemory::Memcpy(Buffer.GetData(), GetReadBufferPos(), DataSize);
+		ReadPosition = 0;
+		WritePosition = DataSize;
 	}
 }
 
-bool RecvBuffer::WriteData(uint32 Size)
+bool RecvBuffer::WriteData(int32 Size)
 {
 	if (GetFreeSize() < Size)
 	{
 		return false;
 	}
 
-	Head += Size;
+	WritePosition += Size;
 	return true;
 }
 
-bool RecvBuffer::ReadData(uint32 Size)
+bool RecvBuffer::ReadData(int32 Size)
 {
 	if (GetDataSize() < Size)
 	{
 		return false;
 	}
 
-	Tail += Size;
+	ReadPosition += Size;
 	return true;
 }
-

@@ -19,18 +19,18 @@ public:
 	RecvBuffer();
 
 public:
-	uint32 GetDataSize() const { return Head - Tail; }
-	uint32 GetFreeSize() const { return MAX_BUFFER_SIZE - Head; }
-	char* GetBufferHead() { return Buffer.GetData() + Head; }
-	char* GetBufferTail() { return Buffer.GetData() + Tail; }
+	int32 GetDataSize() const { return WritePosition - ReadPosition; }
+	int32 GetFreeSize() const { return MAX_BUFFER_SIZE - WritePosition; }
+	char* GetWriteBufferPos() { return Buffer.GetData() + WritePosition; }
+	char* GetReadBufferPos() { return Buffer.GetData() + ReadPosition; }
 
 public:
 	void CleanupBuffer();
-	bool WriteData(uint32 Size);
-	bool ReadData(uint32 Size);
+	bool WriteData(int32 Size);
+	bool ReadData(int32 Size);
 
 protected:
 	TArray<char> Buffer;
-	uint32 Head;
-	uint32 Tail;
+	int32 WritePosition;
+	int32 ReadPosition;
 };
