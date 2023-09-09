@@ -2,6 +2,7 @@
 
 
 #include "ClientSession.h"
+#include "ServerPacketHandler.h"
 
 UClientSession::UClientSession()
 	: Socket(INVALID_SOCKET), Thread(nullptr), bIsConnected(false), bIsThreadRunning(false), bIsRegisteredSend(false)
@@ -21,7 +22,7 @@ UClientSession::~UClientSession()
 	FD_ZERO(&WriteSet);
 
 	StopThread();
-	Disconnect();
+	Disconnect("~UClientSession()");
 	WSACleanup();
 }
 
@@ -34,7 +35,7 @@ bool UClientSession::Init()
 uint32 UClientSession::Run()
 {
 	FPlatformProcess::Sleep(0.5f);
-	while(bIsThreadRunning.Load())
+	while (bIsThreadRunning.Load())
 	{
 		Dispatch();
 	}
@@ -49,13 +50,12 @@ void UClientSession::Stop()
 
 void UClientSession::Exit()
 {
-
 }
 
 bool UClientSession::InitSocket()
 {
 	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), OUT & wsaData) != NO_ERROR)
+	if (WSAStartup(MAKEWORD(2, 2), OUT &wsaData) != NO_ERROR)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Fail to WSAStartup "));
 	}
@@ -103,7 +103,7 @@ bool UClientSession::Connect()
 			}
 
 			// Error
-			HandleError("connect Error");
+			HandleError(ErrorCode);
 			bIsConnected = false;
 			return false;
 		}
@@ -112,11 +112,12 @@ bool UClientSession::Connect()
 	return true;
 }
 
-void UClientSession::Disconnect()
+void UClientSession::Disconnect(FString Cause)
 {
 	// If this function is called and you want to reconnect, you must call InitSocket
 	if (bIsConnected)
 	{
+		UE_LOG(LogTemp, Error, TEXT("Disconnect cause: %s"), *Cause);
 		closesocket(Socket);
 		Socket = INVALID_SOCKET;
 		bIsConnected = false;
@@ -126,9 +127,8 @@ void UClientSession::Disconnect()
 
 void UClientSession::Send(SendBuffer Buffer)
 {
-	if(bIsConnected)
+	if (bIsConnected)
 	{
-		FScopeLock ScopeLock(&Lock);
 		SendBuffers.Enqueue(Buffer);
 
 		bIsRegisteredSend.Store(true);
@@ -136,16 +136,25 @@ void UClientSession::Send(SendBuffer Buffer)
 	}
 }
 
-void UClientSession::HandleError(FString Cause)
+void UClientSession::HandleError(int32 ErrorCode)
 {
-	UE_LOG(LogTemp, Error, TEXT("Error[%d] %s "), WSAGetLastError(), *Cause);
-	Disconnect();
+	switch (ErrorCode)
+	{
+	case WSAECONNRESET:
+	case WSAECONNABORTED:
+		Disconnect(L"HandleError");
+		break;
+	default:
+		// TODO: Log
+		Disconnect(L"HandleError");
+		break;
+	}
 }
 
 bool UClientSession::RunThread()
 {
 	UE_LOG(LogTemp, Log, TEXT("RunThread"));
-	if(Thread != nullptr)
+	if (Thread != nullptr)
 	{
 		return false;
 	}
@@ -156,30 +165,81 @@ bool UClientSession::RunThread()
 
 void UClientSession::StopThread()
 {
-	if(bIsThreadRunning.Load() == true)
+	if (bIsThreadRunning.Load() == true)
 	{
 		Thread->Kill(false);
 		delete Thread;
 		Thread = nullptr;
 	}
 
-	if(bIsConnected)
+	if (bIsConnected)
 	{
-		Disconnect();
+		Disconnect("Stop Thread");
 	}
 }
 
-int32 UClientSession::OnRecv(char* Buffer, int32 DataSize)
+bool UClientSession::ProcessRecv(int32 NumOfBytes)
 {
-	// TODO HANDLE PACKET
-	UE_LOG(LogTemp, Log, TEXT("OnRecv DataLen = %d"), DataSize);
-	return DataSize;
+	if (NumOfBytes == 0)
+	{
+		return false;
+	}
+
+	if (RecvBuffer.WriteData(NumOfBytes) == false)
+	{
+		return false;
+	}
+
+	int32 DataSize = RecvBuffer.GetDataSize();
+	int32 ProcessSize = OnRecv(RecvBuffer.GetReadBufferPos(), DataSize);
+	if (ProcessSize < 0 || DataSize < ProcessSize || RecvBuffer.ReadData(ProcessSize) == false)
+	{
+		Disconnect("");
+		return false;
+	}
+
+	RecvBuffer.CleanupBuffer();
+	return true;
+}
+
+int32 UClientSession::OnRecv(char* Buffer, int32 Len)
+{
+	int32 ProcessSize = 0;
+
+	while (true)
+	{
+		int32 DataSize = Len - ProcessSize;
+
+		// able parse PacketHeader
+		if (DataSize < sizeof(PacketHeader))
+		{
+			break;
+		}
+
+		PacketHeader Header = *(reinterpret_cast<PacketHeader*>(&Buffer[ProcessSize]));
+
+		// able parse data
+		if (DataSize < Header.Size)
+		{
+			break;
+		}
+
+		// TEMP LOG
+		UE_LOG(LogTemp, Log, TEXT("OnRecv type: %d size: %d"), Header.Type, Header.Size);
+		ServerPacketHandler::HandlePacket(this, &Buffer[ProcessSize], Header.Size);
+
+		ProcessSize += Header.Size;
+
+		break;
+	}
+
+	return ProcessSize;
 }
 
 
 void UClientSession::Dispatch()
 {
-	if(bIsConnected == false)
+	if (bIsConnected == false)
 	{
 		return;
 	}
@@ -197,48 +257,34 @@ void UClientSession::Dispatch()
 	int32 RetVal = select(0, &ReadSet, &WriteSet, nullptr, &Timeout);
 	if (RetVal == SOCKET_ERROR)
 	{
-		HandleError("select Error");
+		int32 ErrorCode = WSAGetLastError();
+		HandleError(ErrorCode);
 		return;
 	}
-	else if (RetVal == 0)
+	if (RetVal == 0)
 	{
-		HandleError("select Timeout");
+		int32 ErrorCode = WSAGetLastError();
+		HandleError(ErrorCode);
 		return;
 	}
 
 	// Recv
 	if (FD_ISSET(Socket, &ReadSet))
 	{
-		int32 RecvLen = recv(Socket, RecvBuffer.GetBufferHead(), RecvBuffer.GetFreeSize(), 0);
-		if (RecvLen == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK)
+		int32 RecvLen = recv(Socket, RecvBuffer.GetWriteBufferPos(), RecvBuffer.GetFreeSize(), 0);
+		if (ProcessRecv(RecvLen) == false)
 		{
-			HandleError("recv Error");
+			int32 ErrorCode = WSAGetLastError();
+			HandleError(ErrorCode);
 			return;
 		}
-
-		if (RecvBuffer.WriteData(RecvLen) == false)
-		{
-			HandleError("WriteData Error");
-			return;
-		}
-
-		const int32 DataSize = RecvBuffer.GetDataSize();
-		int32 ProcessLen = OnRecv(RecvBuffer.GetBufferHead(), DataSize);
-		if (ProcessLen < 0 || DataSize < ProcessLen || RecvBuffer.ReadData(ProcessLen) == false)
-		{
-			HandleError("ReadData Error");
-			return;
-		}
-
-		RecvBuffer.CleanupBuffer();
 	}
 
 	// Send
 	if (FD_ISSET(Socket, &WriteSet))
-	{ 
+	{
 		if (bIsRegisteredSend.Load())
 		{
-			FScopeLock ScopeLock(&Lock);
 			// TODO
 		}
 	}

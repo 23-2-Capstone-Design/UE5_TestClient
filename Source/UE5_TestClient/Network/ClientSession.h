@@ -19,7 +19,7 @@
  * 
  */
 UCLASS()
-class UE5_TESTCLIENT_API UClientSession : public UObject, public FRunnable
+class UE5_TESTCLIENT_API UClientSession : public UObject, public FRunnable, public TSharedFromThis<UClientSession>
 {
 	GENERATED_BODY()
 
@@ -41,9 +41,9 @@ public:
 public:
 	bool InitSocket();
 	bool Connect();
-	void Disconnect();
+	void Disconnect(FString Cause);
 	void Send(SendBuffer Buffer);
-	void HandleError(FString Cause);
+	void HandleError(int32 ErrorCode);
 
 	// Thread
 public:
@@ -52,7 +52,8 @@ public:
 
 	// Process Packet
 protected:
-	int32 OnRecv(char* Buffer, int32 DataSize);
+	bool ProcessRecv(int32 NumOfBytes);
+	int32 OnRecv(char* Buffer, int32 Len);
 	void Dispatch();
 
 protected:
@@ -61,7 +62,6 @@ protected:
 	bool bIsConnected;
 	TAtomic<bool> bIsThreadRunning;
 	SOCKADDR_IN ServerAddress;
-	FCriticalSection Lock;
 
 	fd_set ReadSet;
 	fd_set WriteSet;
