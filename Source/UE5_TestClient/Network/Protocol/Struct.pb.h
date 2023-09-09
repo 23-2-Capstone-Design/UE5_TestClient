@@ -46,9 +46,6 @@ struct TableStruct_Struct_2eproto {
 };
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_Struct_2eproto;
 namespace protocol {
-class Header;
-struct HeaderDefaultTypeInternal;
-extern HeaderDefaultTypeInternal _Header_default_instance_;
 class Rotate;
 struct RotateDefaultTypeInternal;
 extern RotateDefaultTypeInternal _Rotate_default_instance_;
@@ -57,172 +54,12 @@ struct VectorDefaultTypeInternal;
 extern VectorDefaultTypeInternal _Vector_default_instance_;
 }  // namespace protocol
 PROTOBUF_NAMESPACE_OPEN
-template<> ::protocol::Header* Arena::CreateMaybeMessage<::protocol::Header>(Arena*);
 template<> ::protocol::Rotate* Arena::CreateMaybeMessage<::protocol::Rotate>(Arena*);
 template<> ::protocol::Vector* Arena::CreateMaybeMessage<::protocol::Vector>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace protocol {
 
 // ===================================================================
-
-class Header final :
-    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:protocol.Header) */ {
- public:
-  inline Header() : Header(nullptr) {}
-  ~Header() override;
-  explicit PROTOBUF_CONSTEXPR Header(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
-
-  Header(const Header& from);
-  Header(Header&& from) noexcept
-    : Header() {
-    *this = ::std::move(from);
-  }
-
-  inline Header& operator=(const Header& from) {
-    CopyFrom(from);
-    return *this;
-  }
-  inline Header& operator=(Header&& from) noexcept {
-    if (this == &from) return *this;
-    if (GetOwningArena() == from.GetOwningArena()
-  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
-        && GetOwningArena() != nullptr
-  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
-    ) {
-      InternalSwap(&from);
-    } else {
-      CopyFrom(from);
-    }
-    return *this;
-  }
-
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
-    return GetDescriptor();
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
-    return default_instance().GetMetadata().descriptor;
-  }
-  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
-    return default_instance().GetMetadata().reflection;
-  }
-  static const Header& default_instance() {
-    return *internal_default_instance();
-  }
-  static inline const Header* internal_default_instance() {
-    return reinterpret_cast<const Header*>(
-               &_Header_default_instance_);
-  }
-  static constexpr int kIndexInFileMessages =
-    0;
-
-  friend void swap(Header& a, Header& b) {
-    a.Swap(&b);
-  }
-  inline void Swap(Header* other) {
-    if (other == this) return;
-  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() != nullptr &&
-        GetOwningArena() == other->GetOwningArena()) {
-   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
-    if (GetOwningArena() == other->GetOwningArena()) {
-  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
-      InternalSwap(other);
-    } else {
-      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
-    }
-  }
-  void UnsafeArenaSwap(Header* other) {
-    if (other == this) return;
-    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
-    InternalSwap(other);
-  }
-
-  // implements Message ----------------------------------------------
-
-  Header* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
-    return CreateMaybeMessage<Header>(arena);
-  }
-  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
-  void CopyFrom(const Header& from);
-  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
-  void MergeFrom( const Header& from) {
-    Header::MergeImpl(*this, from);
-  }
-  private:
-  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
-  public:
-  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
-  bool IsInitialized() const final;
-
-  size_t ByteSizeLong() const final;
-  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
-  uint8_t* _InternalSerialize(
-      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
-  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
-
-  private:
-  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
-  void SharedDtor();
-  void SetCachedSize(int size) const final;
-  void InternalSwap(Header* other);
-
-  private:
-  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
-  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
-    return "protocol.Header";
-  }
-  protected:
-  explicit Header(::PROTOBUF_NAMESPACE_ID::Arena* arena,
-                       bool is_message_owned = false);
-  public:
-
-  static const ClassData _class_data_;
-  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
-
-  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  enum : int {
-    kSizeFieldNumber = 1,
-    kTypeFieldNumber = 2,
-  };
-  // uint32 size = 1;
-  void clear_size();
-  uint32_t size() const;
-  void set_size(uint32_t value);
-  private:
-  uint32_t _internal_size() const;
-  void _internal_set_size(uint32_t value);
-  public:
-
-  // .protocol.PacketType type = 2;
-  void clear_type();
-  ::protocol::PacketType type() const;
-  void set_type(::protocol::PacketType value);
-  private:
-  ::protocol::PacketType _internal_type() const;
-  void _internal_set_type(::protocol::PacketType value);
-  public:
-
-  // @@protoc_insertion_point(class_scope:protocol.Header)
- private:
-  class _Internal;
-
-  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
-  typedef void InternalArenaConstructable_;
-  typedef void DestructorSkippable_;
-  struct Impl_ {
-    uint32_t size_;
-    int type_;
-    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
-  };
-  union { Impl_ _impl_; };
-  friend struct ::TableStruct_Struct_2eproto;
-};
-// -------------------------------------------------------------------
 
 class Vector final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:protocol.Vector) */ {
@@ -272,7 +109,7 @@ class Vector final :
                &_Vector_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    0;
 
   friend void swap(Vector& a, Vector& b) {
     a.Swap(&b);
@@ -442,7 +279,7 @@ class Rotate final :
                &_Rotate_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    1;
 
   friend void swap(Rotate& a, Rotate& b) {
     a.Swap(&b);
@@ -571,50 +408,6 @@ class Rotate final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
-// Header
-
-// uint32 size = 1;
-inline void Header::clear_size() {
-  _impl_.size_ = 0u;
-}
-inline uint32_t Header::_internal_size() const {
-  return _impl_.size_;
-}
-inline uint32_t Header::size() const {
-  // @@protoc_insertion_point(field_get:protocol.Header.size)
-  return _internal_size();
-}
-inline void Header::_internal_set_size(uint32_t value) {
-  
-  _impl_.size_ = value;
-}
-inline void Header::set_size(uint32_t value) {
-  _internal_set_size(value);
-  // @@protoc_insertion_point(field_set:protocol.Header.size)
-}
-
-// .protocol.PacketType type = 2;
-inline void Header::clear_type() {
-  _impl_.type_ = 0;
-}
-inline ::protocol::PacketType Header::_internal_type() const {
-  return static_cast< ::protocol::PacketType >(_impl_.type_);
-}
-inline ::protocol::PacketType Header::type() const {
-  // @@protoc_insertion_point(field_get:protocol.Header.type)
-  return _internal_type();
-}
-inline void Header::_internal_set_type(::protocol::PacketType value) {
-  
-  _impl_.type_ = value;
-}
-inline void Header::set_type(::protocol::PacketType value) {
-  _internal_set_type(value);
-  // @@protoc_insertion_point(field_set:protocol.Header.type)
-}
-
-// -------------------------------------------------------------------
-
 // Vector
 
 // float x = 1;
@@ -744,8 +537,6 @@ inline void Rotate::set_yaw(float value) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 

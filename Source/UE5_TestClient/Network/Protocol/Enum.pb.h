@@ -49,8 +49,12 @@ namespace protocol {
 
 enum PacketType : int {
   PT_NONE = 0,
-  PT_C_MOVE = 1,
-  PT_S_MOVE = 2,
+  PT_C_JOIN = 1,
+  PT_S_JOIN = 2,
+  PT_C_LEAVE = 3,
+  PT_S_LEAVE = 4,
+  PT_C_MOVE = 5,
+  PT_S_MOVE = 6,
   PacketType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   PacketType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
