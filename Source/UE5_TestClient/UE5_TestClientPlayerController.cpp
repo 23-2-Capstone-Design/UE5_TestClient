@@ -13,40 +13,16 @@ AUE5_TestClientPlayerController::AUE5_TestClientPlayerController()
 		Session = ClientSessionRef.Object;
 	}*/
 
+	/*
 	Session = NewObject<UClientSession>();
-
-	PrimaryActorTick.bCanEverTick = true;
+	*/
 }
 
 AUE5_TestClientPlayerController::~AUE5_TestClientPlayerController()
 {
 }
 
-void AUE5_TestClientPlayerController::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-}
-
 void AUE5_TestClientPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (Session->InitSocket() == false)
-	{
-		return;
-	}
-
-	if (Session->Connect() == false)
-	{
-		return;
-	}
-
-	if (Session->IsConnected())
-	{
-		Session->RunThread();
-		if (Session->IsThreadRunning() == false)
-		{
-			UE_LOG(LogTemp, Log, TEXT("RunThread Error"));
-		}
-	}
 }

@@ -19,10 +19,5 @@ public:
 	virtual ~AUE5_TestClientPlayerController() override;
 
 public:
-	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
-
-protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Network")
-	TObjectPtr<UClientSession> Session;
 };
