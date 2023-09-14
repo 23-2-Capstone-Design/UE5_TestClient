@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Network/ClientSession.h"
+#include "Kismet/GameplayStatics.h"
+#include "UE5_TestClientGameInstance.h"
 #include "UE5_TestClientPlayerController.generated.h"
 
 /**
@@ -20,4 +22,8 @@ public:
 
 public:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+
+protected:
+	UUE5_TestClientGameInstance* GI;
 };
