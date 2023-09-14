@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Protocol/Packet.pb.h"
 #include "SendBuffer.h"
-#include <functional>
 
 class UClientSession;
 using PacketHandlerFunc = TFunction<bool(UClientSession*, char*, int32)>;
@@ -14,7 +13,7 @@ extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
 struct UE5_TESTCLIENT_API PacketHeader
 {
 	uint16 Size;
-	protocol::PacketType Type;
+	uint16 Type;
 };
 
 bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
@@ -59,8 +58,6 @@ public:
 		return GPacketHandler[Header->Type](Session, Buffer, NumOfBytes);
 	}
 
-	static SendBuffer MakeSendBuffer(protocol::C_MOVE& Packet) { return MakeSendBuffer(Packet, protocol::PT_S_MOVE); }
-
 private:
 	template <typename PacketType, typename ProcessFunc>
 	static bool HandlePacket(ProcessFunc Func, UClientSession* Session, char* Buffer, int32 NumOfBytes)
@@ -70,18 +67,35 @@ private:
 	}
 
 	template <typename T>
-	static SendBuffer MakeSendBuffer(T& Packet, protocol::PacketType PacketType)
+	static USendBuffer* MakeSendBuffer(T& Packet, protocol::PacketType PacketType)
 	{
 		const uint16 DataSize = static_cast<uint16>(Packet.ByteSizeLong());
 		const uint16 PacketSize = DataSize + sizeof(PacketHeader);
 
-		SendBuffer Buffer(PacketSize);
-		PacketHeader* Header = reinterpret_cast<PacketHeader*>(Buffer.GetBuffer());
+		USendBuffer* Buffer = NewObject<USendBuffer>();
+		Buffer->SetSize(PacketSize);
+		PacketHeader* Header = reinterpret_cast<PacketHeader*>(Buffer->GetBuffer());
 		Header->Size = PacketSize;
 		Header->Type = PacketType;
 
 		Packet.SerializeToArray(&Header[1], DataSize);
 
 		return Buffer;
+	}
+
+public:
+	static USendBuffer* MakeSendBuffer(protocol::C_JOIN& Packet)
+	{
+		return MakeSendBuffer(Packet, protocol::PT_C_JOIN);
+	}
+
+	static USendBuffer* MakeSendBuffer(protocol::C_LEAVE& Packet)
+	{
+		return MakeSendBuffer(Packet, protocol::PT_C_LEAVE);
+	}
+
+	static USendBuffer* MakeSendBuffer(protocol::C_MOVE& Packet)
+	{
+		return MakeSendBuffer(Packet, protocol::PT_C_MOVE);
 	}
 };

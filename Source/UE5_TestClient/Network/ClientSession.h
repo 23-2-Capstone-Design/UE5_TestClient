@@ -42,7 +42,7 @@ public:
 	bool InitSocket();
 	bool Connect();
 	void Disconnect(FString Cause);
-	void Send(SendBuffer Buffer);
+	void Send(USendBuffer* Buffer);
 	void HandleError(int32 ErrorCode);
 
 	// Thread
@@ -66,7 +66,8 @@ protected:
 	fd_set ReadSet;
 	fd_set WriteSet;
 
-	TQueue<SendBuffer> SendBuffers;
-	TAtomic<bool> bIsRegisteredSend;
+	TQueue<USendBuffer*> SendQueue;
+	TArray<USendBuffer*> SendBuffers;
+	int32 SendBufferDataSize;
 	RecvBuffer RecvBuffer;
 };

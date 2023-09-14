@@ -5,7 +5,7 @@
 #include "ServerPacketHandler.h"
 
 UClientSession::UClientSession()
-	: Socket(INVALID_SOCKET), Thread(nullptr), bIsConnected(false), bIsThreadRunning(false), bIsRegisteredSend(false)
+	: Socket(INVALID_SOCKET), Thread(nullptr), bIsConnected(false), bIsThreadRunning(false), SendBufferDataSize(0)
 {
 	FD_ZERO(&ReadSet);
 	FD_ZERO(&WriteSet);
@@ -125,15 +125,15 @@ void UClientSession::Disconnect(FString Cause)
 }
 
 
-void UClientSession::Send(SendBuffer Buffer)
+void UClientSession::Send(USendBuffer* Buffer)
 {
-	if (bIsConnected)
+	if (IsConnected() == false)
 	{
-		SendBuffers.Enqueue(Buffer);
-
-		bIsRegisteredSend.Store(true);
-		//TODO
+		UE_LOG(LogTemp, Log, TEXT("Send Error: not connected"));
+		return;
 	}
+
+	SendQueue.Enqueue(Buffer);
 }
 
 void UClientSession::HandleError(int32 ErrorCode)
@@ -225,7 +225,8 @@ int32 UClientSession::OnRecv(char* Buffer, int32 Len)
 		}
 
 		// TEMP LOG
-		UE_LOG(LogTemp, Log, TEXT("OnRecv type: %d size: %d"), Header.Type, Header.Size);
+		UE_LOG(LogTemp, Log, TEXT("OnRecv type: %d size: %d BufferFreeSize: %d"), Header.Type, Header.Size,
+		       RecvBuffer.GetFreeSize());
 		ServerPacketHandler::HandlePacket(this, &Buffer[ProcessSize], Header.Size);
 
 		ProcessSize += Header.Size;
@@ -283,9 +284,24 @@ void UClientSession::Dispatch()
 	// Send
 	if (FD_ISSET(Socket, &WriteSet))
 	{
-		if (bIsRegisteredSend.Load())
+		if (SendQueue.IsEmpty() == false)
 		{
-			// TODO
+			USendBuffer* SendBuffer = nullptr;
+			SendBuffers.Reset();
+			while (SendQueue.Dequeue(SendBuffer))
+			{
+				int32 SendLen = send(Socket, SendBuffer->GetBuffer(), SendBuffer->GetSize(), 0);
+				if (SendLen == SOCKET_ERROR)
+				{
+					int32 ErrorCode = WSAGetLastError();
+					if (ErrorCode == WSAEWOULDBLOCK)
+					{
+						continue;
+					}
+					Disconnect("Send Error");
+					break;
+				}
+			}
 		}
 	}
 }
