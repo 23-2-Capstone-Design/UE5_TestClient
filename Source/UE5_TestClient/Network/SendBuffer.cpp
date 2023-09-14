@@ -3,7 +3,12 @@
 
 #include "SendBuffer.h"
 
-SendBuffer::SendBuffer(uint32 BufferSize)
+USendBuffer::USendBuffer()
 {
-	Buffer.Init(0, BufferSize);
+}
+
+void USendBuffer::SetSize(uint16 BufferSize)
+{
+	Size = BufferSize;
+	Buffer.Init(0, Size);
 }

@@ -3,24 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
+#include "SendBuffer.generated.h"
 
 /**
  * 
  */
-class UE5_TESTCLIENT_API SendBuffer
+UCLASS()
+class UE5_TESTCLIENT_API USendBuffer : public UObject
 {
+	GENERATED_BODY()
 public:
-	SendBuffer()
-	{
-	}
-
-	SendBuffer(uint32 BufferSize);
+	USendBuffer();
 
 public:
+	void SetSize(uint16 BufferSize);
 	char* GetBuffer() { return Buffer.GetData(); }
-	uint32 GetSize() { return Size; }
+	uint16 GetSize() { return Size; }
 
 protected:
 	TArray<char> Buffer;
-	uint32 Size;
+	uint16 Size;
 };
