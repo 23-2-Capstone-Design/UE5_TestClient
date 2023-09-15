@@ -7,29 +7,6 @@
 
 PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
-bool Handle_Invalid(UClientSession* Session, char* Buffer, int32 NumOfBytes)
-{
-	return false;
-}
-
-bool Handle_S_JOIN(UClientSession* Session, protocol::S_JOIN& Packet)
-{
-	UE_LOG(LogTemp, Log, TEXT("Handle S JOIN %d"), Packet.id());
-	return true;
-}
-
-bool Handle_S_LEAVE(UClientSession* Session, protocol::S_LEAVE& Packet)
-{
-	UE_LOG(LogTemp, Log, TEXT("Handle S LEAVE %d"), Packet.id());
-	return true;
-}
-
-bool Handle_S_MOVE(UClientSession* Session, protocol::S_MOVE& Packet)
-{
-	return true;
-}
-
-
 AUE5_TestClientPlayerController::AUE5_TestClientPlayerController()
 {
 	// TODO Edit Ref Path
@@ -46,21 +23,21 @@ AUE5_TestClientPlayerController::AUE5_TestClientPlayerController()
 
 	for (int32 i = 0; i < UINT16_MAX; i++)
 	{
-		GPacketHandler[i] = Handle_Invalid;
+		GPacketHandler[i] = &AUE5_TestClientPlayerController::Handle_Invalid;
 	}
 	GPacketHandler[protocol::PT_S_JOIN] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
 		{
-			return HandlePacket<protocol::S_JOIN>(Handle_S_JOIN, Session, Buffer, NumOfBytes);
+			return HandlePacket<protocol::S_JOIN>(&AUE5_TestClientPlayerController::Handle_S_JOIN, Session, Buffer, NumOfBytes);
 		};
 	GPacketHandler[protocol::PT_S_LEAVE] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
 		{
-			return HandlePacket<protocol::S_LEAVE>(Handle_S_LEAVE, Session, Buffer, NumOfBytes);
+			return HandlePacket<protocol::S_LEAVE>(&AUE5_TestClientPlayerController::Handle_S_LEAVE, Session, Buffer, NumOfBytes);
 		};
 	GPacketHandler[protocol::PT_S_MOVE] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
 		{
-			return HandlePacket<protocol::S_MOVE>(Handle_S_MOVE, Session, Buffer, NumOfBytes);
+			return HandlePacket<protocol::S_MOVE>(&AUE5_TestClientPlayerController::Handle_S_MOVE, Session, Buffer, NumOfBytes);
 		};
-
+	
 	GI = nullptr;
 
 	PrimaryActorTick.bCanEverTick = true;
@@ -98,7 +75,29 @@ void AUE5_TestClientPlayerController::Tick(float DeltaSeconds)
 	FPacketHeader* Header = nullptr;
 	while(GI->GetPacketQueueRef().Dequeue(Header))
 	{
-		GPacketHandler[Header->Type](Session, (char*)Header, Header->Size);
+		GPacketHandler[Header->Type](Session, reinterpret_cast<char*>(Header), Header->Size);
 	}
 	
+}
+
+bool AUE5_TestClientPlayerController::Handle_Invalid(UClientSession* Session, char* Buffer, int32 NumOfBytes)
+{
+	return false;
+}
+
+bool AUE5_TestClientPlayerController::Handle_S_JOIN(UClientSession* Session, protocol::S_JOIN& Packet)
+{
+	UE_LOG(LogTemp, Log, TEXT("Handle S JOIN %d"), Packet.id());
+	return true;
+}
+
+bool AUE5_TestClientPlayerController::Handle_S_LEAVE(UClientSession* Session, protocol::S_LEAVE& Packet)
+{
+	UE_LOG(LogTemp, Log, TEXT("Handle S LEAVE %d"), Packet.id());
+	return true;
+}
+
+bool AUE5_TestClientPlayerController::Handle_S_MOVE(UClientSession* Session, protocol::S_MOVE& Packet)
+{
+	return true;
 }

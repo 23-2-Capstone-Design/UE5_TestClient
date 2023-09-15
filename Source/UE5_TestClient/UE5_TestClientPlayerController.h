@@ -13,11 +13,6 @@
 using PacketHandlerFunc = TFunction<bool(UClientSession*, char*, int32)>;
 extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
-bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
-bool Handle_S_JOIN(class UClientSession* Session, protocol::S_JOIN& Packet);
-bool Handle_S_LEAVE(class UClientSession* Session, protocol::S_LEAVE& Packet);
-bool Handle_S_MOVE(class UClientSession* Session, protocol::S_MOVE& Packet);
-
 /**
  * 
  */
@@ -32,6 +27,13 @@ public:
 public:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+
+	// Packet Handler
+protected:
+	static bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
+	static bool Handle_S_JOIN(class UClientSession* Session, protocol::S_JOIN& Packet);
+	static bool Handle_S_LEAVE(class UClientSession* Session, protocol::S_LEAVE& Packet);
+	static bool Handle_S_MOVE(class UClientSession* Session, protocol::S_MOVE& Packet);
 
 protected:
 	template <typename PacketType, typename ProcessFunc>
