@@ -22,6 +22,8 @@ void UUE5_TestClientGameInstance::Init()
 		return;
 	}
 
+	Session->SetGameInstance(this);
+
 	if (Session->IsConnected())
 	{
 		Session->RunThread();

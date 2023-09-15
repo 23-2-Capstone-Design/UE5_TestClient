@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
 #include "Network/ClientSession.h"
+#include "Network/PacketHeader.h"
 #include "UE5_TestClientGameInstance.generated.h"
 
 /**
@@ -20,9 +21,11 @@ public:
 
 public:
 	UClientSession* GetSession() { return Session; }
-
+	TQueue<FPacketHeader*>& GetPacketQueueRef() { return PacketQueue; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Network")
 	UClientSession* Session;
+
+	TQueue<FPacketHeader*> PacketQueue;
 };
