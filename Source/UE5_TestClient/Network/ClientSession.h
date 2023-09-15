@@ -34,6 +34,12 @@ public:
 	virtual void Exit() override;
 
 public:
+	APlayerController* GetPlayerController() { return PlayerController; }
+	void SetPlayerController(APlayerController* Object) { PlayerController = Object; }
+	UGameInstance* GetGameInstance() { return GameInstance; }
+	void SetGameInstance(UGameInstance* Object) { GameInstance = Object; }
+
+public:
 	bool IsConnected() { return bIsConnected; }
 	bool IsThreadRunning() { return bIsThreadRunning.Load(); }
 
@@ -70,4 +76,7 @@ protected:
 	TArray<USendBuffer*> SendBuffers;
 	int32 SendBufferDataSize;
 	RecvBuffer RecvBuffer;
+
+	APlayerController* PlayerController;
+	UGameInstance* GameInstance;
 };

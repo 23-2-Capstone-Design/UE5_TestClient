@@ -3,6 +3,7 @@
 
 #include "ClientSession.h"
 #include "ServerPacketHandler.h"
+#include "PacketHeader.h"
 
 UClientSession::UClientSession()
 	: Socket(INVALID_SOCKET), Thread(nullptr), bIsConnected(false), bIsThreadRunning(false), SendBufferDataSize(0)
@@ -13,6 +14,9 @@ UClientSession::UClientSession()
 	ServerAddress.sin_family = AF_INET;
 	ServerAddress.sin_port = htons(PORT);
 	inet_pton(AF_INET, TCHAR_TO_ANSI(*IP_ADDRESS), &ServerAddress.sin_addr);
+
+	PlayerController = nullptr;
+	GameInstance = nullptr;
 }
 
 UClientSession::~UClientSession()
@@ -211,12 +215,12 @@ int32 UClientSession::OnRecv(char* Buffer, int32 Len)
 		int32 DataSize = Len - ProcessSize;
 
 		// able parse PacketHeader
-		if (DataSize < sizeof(PacketHeader))
+		if (DataSize < sizeof(FPacketHeader))
 		{
 			break;
 		}
 
-		PacketHeader Header = *(reinterpret_cast<PacketHeader*>(&Buffer[ProcessSize]));
+		FPacketHeader Header = *(reinterpret_cast<FPacketHeader*>(&Buffer[ProcessSize]));
 
 		// able parse data
 		if (DataSize < Header.Size)
