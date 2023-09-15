@@ -8,8 +8,6 @@ void UUE5_TestClientGameInstance::Init()
 {
 	Super::Init();
 
-	ServerPacketHandler::Init();
-
 	Session = NewObject<UClientSession>();
 
 	if (Session->InitSocket() == false)
