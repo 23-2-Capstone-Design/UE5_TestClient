@@ -9,13 +9,6 @@
 #include "../UE5_TestClientGameInstance.h"
 
 class UClientSession;
-//using PacketHandlerFunc = TFunction<bool(UClientSession*, char*, int32)>;
-//extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
-
-//bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
-//bool Handle_S_JOIN(class UClientSession* Session, protocol::S_JOIN& Packet);
-//bool Handle_S_LEAVE(class UClientSession* Session, protocol::S_LEAVE& Packet);
-//bool Handle_S_MOVE(class UClientSession* Session, protocol::S_MOVE& Packet);
 
 /**
  * 
@@ -23,32 +16,16 @@ class UClientSession;
 class UE5_TESTCLIENT_API ServerPacketHandler
 {
 public:
-	static void Init()
-	{
-	}
-
-	static bool HandlePacket(UClientSession* Session, char* Buffer, int32 NumOfBytes)
+	static void HandlePacket(UClientSession* Session, char* Buffer, int32 NumOfBytes)
 	{
 		// TODO Interface
 		UUE5_TestClientGameInstance* Instance = Cast<UUE5_TestClientGameInstance>(Session->GetGameInstance());
 		FPacketHeader* Header = reinterpret_cast<FPacketHeader*>(Buffer);
+
 		Instance->GetPacketQueueRef().Enqueue(Header);
-		return true;
-		//return GPacketHandler[Header->Type](Session, Buffer, NumOfBytes);
 	}
 
 private:
-	template <typename PacketType, typename ProcessFunc>
-	static bool HandlePacket(ProcessFunc Func, UClientSession* Session, char* Buffer, int32 NumOfBytes)
-	{
-		PacketType Packet;
-		if (Packet.ParseFromArray(buffer + sizeof(FPacketHeader), NumOfBytes - sizeof(FPacketHeader)) == false)
-		{
-			return false;
-		}
-		return Func(Session, Packet);
-	}
-
 	template <typename T>
 	static USendBuffer* MakeSendBuffer(T& Packet, protocol::PacketType PacketType)
 	{
