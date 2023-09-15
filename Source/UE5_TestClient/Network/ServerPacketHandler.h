@@ -5,57 +5,36 @@
 #include "CoreMinimal.h"
 #include "Protocol/Packet.pb.h"
 #include "SendBuffer.h"
+#include "PacketHeader.h"
+#include "../UE5_TestClientGameInstance.h"
 
 class UClientSession;
-using PacketHandlerFunc = TFunction<bool(UClientSession*, char*, int32)>;
-extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
+//using PacketHandlerFunc = TFunction<bool(UClientSession*, char*, int32)>;
+//extern PacketHandlerFunc GPacketHandler[UINT16_MAX];
 
-struct UE5_TESTCLIENT_API PacketHeader
-{
-	uint16 Size;
-	uint16 Type;
-};
-
-bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
-bool Handle_S_JOIN(class UClientSession* Session, protocol::S_JOIN& Packet);
-bool Handle_S_LEAVE(class UClientSession* Session, protocol::S_LEAVE& Packet);
-bool Handle_S_MOVE(class UClientSession* Session, protocol::S_MOVE& Packet);
+//bool Handle_Invalid(class UClientSession* Session, char* Buffer, int32 NumOfBytes);
+//bool Handle_S_JOIN(class UClientSession* Session, protocol::S_JOIN& Packet);
+//bool Handle_S_LEAVE(class UClientSession* Session, protocol::S_LEAVE& Packet);
+//bool Handle_S_MOVE(class UClientSession* Session, protocol::S_MOVE& Packet);
 
 /**
  * 
  */
 class UE5_TESTCLIENT_API ServerPacketHandler
 {
-	enum
-	{
-		HANDLER_SIZE = 10000
-	};
-
 public:
 	static void Init()
 	{
-		for (int32 i = 0; i < UINT16_MAX; i++)
-		{
-			GPacketHandler[i] = Handle_Invalid;
-		}
-		GPacketHandler[protocol::PT_S_JOIN] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
-		{
-			return HandlePacket<protocol::S_JOIN>(Handle_S_JOIN, Session, Buffer, NumOfBytes);
-		};
-		GPacketHandler[protocol::PT_S_LEAVE] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
-		{
-			return HandlePacket<protocol::S_LEAVE>(Handle_S_LEAVE, Session, Buffer, NumOfBytes);
-		};
-		GPacketHandler[protocol::PT_S_MOVE] = [](UClientSession* Session, char* Buffer, int32 NumOfBytes)
-		{
-			return HandlePacket<protocol::S_MOVE>(Handle_S_MOVE, Session, Buffer, NumOfBytes);
-		};
 	}
 
 	static bool HandlePacket(UClientSession* Session, char* Buffer, int32 NumOfBytes)
 	{
-		PacketHeader* Header = reinterpret_cast<PacketHeader*>(Buffer);
-		return GPacketHandler[Header->Type](Session, Buffer, NumOfBytes);
+		// TODO Interface
+		UUE5_TestClientGameInstance* Instance = Cast<UUE5_TestClientGameInstance>(Session->GetGameInstance());
+		FPacketHeader* Header = reinterpret_cast<FPacketHeader*>(Buffer);
+		Instance->GetPacketQueueRef().Enqueue(Header);
+		return true;
+		//return GPacketHandler[Header->Type](Session, Buffer, NumOfBytes);
 	}
 
 private:
@@ -63,6 +42,10 @@ private:
 	static bool HandlePacket(ProcessFunc Func, UClientSession* Session, char* Buffer, int32 NumOfBytes)
 	{
 		PacketType Packet;
+		if (Packet.ParseFromArray(buffer + sizeof(FPacketHeader), NumOfBytes - sizeof(FPacketHeader)) == false)
+		{
+			return false;
+		}
 		return Func(Session, Packet);
 	}
 
@@ -70,11 +53,11 @@ private:
 	static USendBuffer* MakeSendBuffer(T& Packet, protocol::PacketType PacketType)
 	{
 		const uint16 DataSize = static_cast<uint16>(Packet.ByteSizeLong());
-		const uint16 PacketSize = DataSize + sizeof(PacketHeader);
+		const uint16 PacketSize = DataSize + sizeof(FPacketHeader);
 
 		USendBuffer* Buffer = NewObject<USendBuffer>();
 		Buffer->SetSize(PacketSize);
-		PacketHeader* Header = reinterpret_cast<PacketHeader*>(Buffer->GetBuffer());
+		FPacketHeader* Header = reinterpret_cast<FPacketHeader*>(Buffer->GetBuffer());
 		Header->Size = PacketSize;
 		Header->Type = PacketType;
 
